@@ -1,7 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FluentValidation;
 
+using Microsoft.AspNetCore.Mvc;
+
+using PaymentGateway.Api.Extensions;
+using PaymentGateway.Api.Interfaces.Services;
+using PaymentGateway.Api.Models.Requests;
 using PaymentGateway.Api.Models.Responses;
-using PaymentGateway.Api.Services;
 
 namespace PaymentGateway.Api.Controllers;
 
@@ -9,18 +13,44 @@ namespace PaymentGateway.Api.Controllers;
 [ApiController]
 public class PaymentsController : Controller
 {
-    private readonly PaymentsRepository _paymentsRepository;
+    private readonly IPaymentsService _paymentsService;
+    private readonly IValidator<PostPaymentRequest> _paymentValidator;
 
-    public PaymentsController(PaymentsRepository paymentsRepository)
+    public PaymentsController(IPaymentsService paymentsService,
+        IValidator<PostPaymentRequest> paymentValidator)
     {
-        _paymentsRepository = paymentsRepository;
+        _paymentsService = paymentsService;
+        _paymentValidator = paymentValidator;
     }
 
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<PostPaymentResponse?>> GetPaymentAsync(Guid id)
     {
-        var payment = _paymentsRepository.Get(id);
+        var payment = await _paymentsService.GetPaymentByIdAsync(id);
+
+        if (payment == null)
+        {
+            return NotFound("The payment you requested does not exist");
+        }
 
         return new OkObjectResult(payment);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<PostPaymentResponse?>> ProcessPaymentAsync(PostPaymentRequest postPaymentRequest, CancellationToken cancellationToken = default)
+    {
+        var validationResult = await _paymentValidator.ValidateAsync(postPaymentRequest, cancellationToken);
+
+        if (!validationResult.IsValid)
+        {
+            return validationResult.ToPostPaymentBadRequestResponse();
+        }
+
+        var postPaymentResponse = await _paymentsService.ProcessPaymentAsync(postPaymentRequest, cancellationToken);
+        
+        if (postPaymentResponse == null)
+            return StatusCode(500, "An unexpected error occurred. Please try again later.");
+
+        return new OkObjectResult(postPaymentResponse);
     }
 }

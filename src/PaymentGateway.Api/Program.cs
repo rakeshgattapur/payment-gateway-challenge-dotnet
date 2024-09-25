@@ -1,4 +1,14 @@
+using FluentValidation;
+
+using PaymentGateway.Api.Interfaces.Repositories;
+using PaymentGateway.Api.Interfaces.Services;
+using PaymentGateway.Api.Models.Requests;
+using PaymentGateway.Api.Repositories;
+using PaymentGateway.Api.ServiceClients;
 using PaymentGateway.Api.Services;
+using PaymentGateway.Api.Validators;
+
+using Refit;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,7 +19,13 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddSingleton<PaymentsRepository>();
+builder.Services
+    .AddScoped<IPaymentsService, PaymentsService>()
+    .AddScoped<ICurrencyService, CurrencyService>()
+    .AddScoped<IValidator<PostPaymentRequest>, PostPaymentRequestValidator>()
+    .AddSingleton<IPaymentsRepository, InMemoryPaymentsRepository>()
+    .AddRefitClient<IAcquiringBankServiceClient>()
+        .ConfigureHttpClient(c => c.BaseAddress = new Uri("http://localhost:8080"));
 
 var app = builder.Build();
 
