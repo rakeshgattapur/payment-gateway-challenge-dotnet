@@ -1,18 +1,26 @@
-# Instructions for candidates
+# External libraries used
+#### The following nuget packages are required to run the application
 
-This is the .NET version of the Payment Gateway challenge. If you haven't already read this [README.md](https://github.com/cko-recruitment/) on the details of this exercise, please do so now. 
+- Moq
+- AutoFixture
+- Refit
+- FluentValidation
 
-## Template structure
-```
-src/
-    PaymentGateway.Api - a skeleton ASP.NET Core Web API
-test/
-    PaymentGateway.Api.Tests - an empty xUnit test project
-imposters/ - contains the bank simulator configuration. Don't change this
+# Testing
 
-.editorconfig - don't change this. It ensures a consistent set of rules for submissions when reformatting code
-docker-compose.yml - configures the bank simulator
-PaymentGateway.sln
-```
+- I have included a Postman collection named: `CKO-PaymentGateway.postman_collection.json`
+- You can run the collection and the collection variables are used to share data between each request
 
-Feel free to change the structure of the solution, use a different test library etc.
+# Assumptions
+
+- Could use any other libraries
+- Do not over engineer it as of now
+- Use of latest features in .net are allowed
+
+# Some enhancements at top of my mind, which could be done in future
+
+- Use result type or use functional programming - OneOf or Either etc
+- Add centralized exception handling for Refit API exception
+- Add support for multiple merchants
+- Use an actual DB
+- Provide support other payment methods such as bank transfer, wallet etc

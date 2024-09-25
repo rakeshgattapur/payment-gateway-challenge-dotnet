@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Net;
+using System.Text.Json;
 
 using PaymentGateway.Api.Enums;
 using PaymentGateway.Api.Extensions;
@@ -47,7 +48,12 @@ public class PaymentsService : IPaymentsService
         catch (ApiException exception)
         {
             _logger.LogCritical(exception, "An exception occured while calling acquiring bank service, statuscode: {StatusCode}", exception.StatusCode);
-            return null;
+
+            return exception.StatusCode switch
+            {
+                HttpStatusCode.BadRequest => new PostPaymentResponse { Status = PaymentStatus.Rejected },
+                _ => null
+            };
         }
 
         if (acquiringBankRequest == null)

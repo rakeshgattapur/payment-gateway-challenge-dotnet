@@ -28,12 +28,11 @@ public class PaymentsController : Controller
     {
         var payment = await _paymentsService.GetPaymentByIdAsync(id);
 
-        if (payment == null)
+        return payment switch
         {
-            return NotFound("The payment you requested does not exist");
-        }
-
-        return new OkObjectResult(payment);
+            null => NotFound("The payment you requested does not exist"),
+            _ => new OkObjectResult(payment)
+        };
     }
 
     [HttpPost]
@@ -47,10 +46,15 @@ public class PaymentsController : Controller
         }
 
         var postPaymentResponse = await _paymentsService.ProcessPaymentAsync(postPaymentRequest, cancellationToken);
-        
-        if (postPaymentResponse == null)
-            return StatusCode(500, "An unexpected error occurred. Please try again later.");
 
-        return new OkObjectResult(postPaymentResponse);
+        return postPaymentResponse switch
+        {
+            null => StatusCode(500, "An unexpected error occurred. Please try again later."),
+            _ => postPaymentResponse.Status switch
+            {
+                Enums.PaymentStatus.Rejected => new BadRequestObjectResult(new PostPaymentValidationResponse { Errors = ["Invalid Payment."] }),
+                _ => new OkObjectResult(postPaymentResponse)
+            }
+        };
     }
 }

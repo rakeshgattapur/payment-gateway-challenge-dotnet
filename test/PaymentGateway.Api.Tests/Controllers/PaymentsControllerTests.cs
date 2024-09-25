@@ -1,5 +1,7 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using FluentValidation;
 using FluentValidation.Results;
@@ -15,6 +17,7 @@ using PaymentGateway.Api.Interfaces.Repositories;
 using PaymentGateway.Api.Interfaces.Services;
 using PaymentGateway.Api.Models.Requests;
 using PaymentGateway.Api.Models.Responses;
+using PaymentGateway.Api.Tests.Utils;
 using PaymentGateway.Api.Validators;
 
 namespace PaymentGateway.Api.Tests.Controllers
@@ -23,13 +26,11 @@ namespace PaymentGateway.Api.Tests.Controllers
     {
         private readonly WebApplicationFactory<PaymentsController> _factory;
         private readonly HttpClient _client;
-        private readonly Mock<IPaymentsRepository> _paymentsRepository;
         private readonly Mock<IPaymentsService> _paymentsService;
         private readonly Mock<IValidator<PostPaymentRequest>> _paymentValidator;
 
         public PaymentsControllerTests()
         {
-            _paymentsRepository = new Mock<IPaymentsRepository>();
             _paymentsService = new Mock<IPaymentsService>();
             _paymentValidator = new Mock<IValidator<PostPaymentRequest>>();
 
@@ -67,7 +68,7 @@ namespace PaymentGateway.Api.Tests.Controllers
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            var paymentResponse = await response.Content.ReadFromJsonAsync<PostPaymentResponse>();
+            var paymentResponse = await response.Content.ReadFromJsonAsync<PostPaymentResponse>(Utilities.AddJsonSerializerOptions());
             Assert.NotNull(paymentResponse);
             Assert.Equal(payment.Id, paymentResponse?.Id);
             Assert.Equal(payment.Status, paymentResponse?.Status);
@@ -130,7 +131,7 @@ namespace PaymentGateway.Api.Tests.Controllers
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            var paymentResponseContent = await response.Content.ReadFromJsonAsync<PostPaymentResponse>();
+            var paymentResponseContent = await response.Content.ReadFromJsonAsync<PostPaymentResponse>(Utilities.AddJsonSerializerOptions());
             Assert.NotNull(paymentResponseContent);
             Assert.Equal(paymentResponse.Id, paymentResponseContent?.Id);
             Assert.Equal(paymentResponse.Status, paymentResponseContent?.Status);
